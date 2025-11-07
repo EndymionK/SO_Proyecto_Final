@@ -1,6 +1,50 @@
+# Build artifacts
 build/
-results/raw/
+*.o
+*.so
+*.a
+
+# Python
 .venv/
+venv/
 *.pyc
 __pycache__/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Results and data (archivos masivos)
+results/raw/
+results/meta/
+results/experiments/
+results/processed/*.csv
+results/processed/*.txt
+results/processed/plots/
+*.proc.csv
+*.proc.*.csv
+*.temp.csv
+*.cpu.stat
+*.meta.json
+
+# Logs
 *.log
+
+# OS
+.DS_Store
+Thumbs.db
+*~
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archives
+*.zip
+*.tar.gz
+*.tar.bz2
+
+# Temporary files
+*.tmp
+.cache/
