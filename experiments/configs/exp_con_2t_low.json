@@ -1,0 +1,11 @@
+{
+  "id": "exp_con_2t_low",
+  "mode": "concurrent",
+  "difficulty": 16,
+  "threads": 2,
+  "affinity": true,
+  "repetitions": 30,
+  "timeout": 60,
+  "seed": 42,
+  "notes": "Concurrent 2 threads (pinned to same CPU) - low difficulty"
+}

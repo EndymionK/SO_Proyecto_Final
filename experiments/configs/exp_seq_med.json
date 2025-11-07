@@ -1,0 +1,11 @@
+{
+  "id": "exp_seq_med",
+  "mode": "sequential",
+  "difficulty": 20,
+  "threads": 1,
+  "affinity": false,
+  "repetitions": 30,
+  "timeout": 120,
+  "seed": 42,
+  "notes": "Sequential baseline - medium difficulty"
+}

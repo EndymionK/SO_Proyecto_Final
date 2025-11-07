@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "CMake Configure",
+      "type": "shell",
+      "command": "cmake -S . -B build -G \"Ninja\" -DCMAKE_BUILD_TYPE=Release",
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always" }
+    },
+    {
+      "label": "CMake Build",
+      "type": "shell",
+      "command": "cmake --build build -- -j$(nproc)",
+      "group": "build",
+      "presentation": { "reveal": "always" }
+    },
+    {
+      "label": "Run miner (smoke)",
+      "type": "shell",
+      "command": "bash -lc \"source ${workspaceFolder}/.venv/bin/activate && ./build/miner --mode sequential --difficulty 18 --threads 1 --timeout 10\"",
+      "group": "test",
+      "presentation": { "reveal": "always" }
+    }
+  ]
+}

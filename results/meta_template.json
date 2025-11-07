@@ -1,0 +1,31 @@
+{
+  "run_id": "exp_001_run_20251107T000000",
+  "experiment_id": "exp_001",
+  "config": {},
+  "host": {
+    "hostname": "",
+    "lscpu": "",
+    "n_cores": 0,
+    "os": "",
+    "kernel": ""
+  },
+  "compiler": {
+    "name": "",
+    "version": "",
+    "flags": ""
+  },
+  "build": {
+    "type": "Release",
+    "cmake_cache_summary": {}
+  },
+  "python_env": {
+    "interpreter": "",
+    "pip_freeze": []
+  },
+  "wsl": {
+    "version": "",
+    "mounts": ""
+  },
+  "git_commit": "",
+  "timestamp": ""
+}

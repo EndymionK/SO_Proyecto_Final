@@ -1,0 +1,6 @@
+,,,hashes_per_second,hashes_per_second,hashes_per_second,elapsed_s
+,,,mean,std,count,mean
+experiment_id,mode,threads,,,,
+exp_001,concurrent,2,742767.0,,1,0.0241179
+exp_001,parallel,2,814394.0,,1,0.0221109
+exp_001,sequential,1,726085.0,,1,0.0508356
