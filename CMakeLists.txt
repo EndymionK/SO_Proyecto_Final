@@ -9,7 +9,13 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -DNDEBUG")
+if(MSVC)
+  set(CMAKE_CXX_FLAGS_RELEASE "/O2 /DNDEBUG")
+  add_compile_options(/W4)
+else()
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -DNDEBUG")
+  add_compile_options(-Wall -Wextra)
+endif()
 
 find_package(OpenSSL REQUIRED)
 find_package(Threads REQUIRED)
@@ -27,6 +33,10 @@ target_link_libraries(miner PRIVATE
   OpenSSL::Crypto
   Threads::Threads
 )
+
+if(WIN32)
+  target_link_libraries(miner PRIVATE psapi)
+endif()
 
 target_compile_options(miner PRIVATE
   -Wall

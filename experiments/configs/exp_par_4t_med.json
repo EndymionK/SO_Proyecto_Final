@@ -1,11 +1,11 @@
 {
   "id": "exp_par_4t_med",
   "mode": "parallel",
-  "difficulty": 20,
+  "difficulty": 22,
   "threads": 4,
   "affinity": false,
-  "repetitions": 30,
-  "timeout": 120,
+  "repetitions": 5,
+  "timeout": 180,
   "seed": 42,
-  "notes": "Parallel 4 threads - medium difficulty"
+  "notes": "Parallel 4 threads - difficulty 22"
 }

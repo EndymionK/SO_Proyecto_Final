@@ -1,11 +1,11 @@
 {
   "id": "exp_seq_med",
   "mode": "sequential",
-  "difficulty": 20,
+  "difficulty": 22,
   "threads": 1,
   "affinity": false,
-  "repetitions": 30,
-  "timeout": 120,
+  "repetitions": 5,
+  "timeout": 180,
   "seed": 42,
-  "notes": "Sequential baseline - medium difficulty"
+  "notes": "Sequential baseline - difficulty 22"
 }

@@ -1,26 +1,27 @@
 #include "metrics.h"
-#include <sys/resource.h>
+#include <windows.h>
+#include <psapi.h>
 #include <fstream>
-#include <sstream>
 #include <iostream>
 
 double Metrics::get_cpu_time() {
-    struct rusage usage;
-    getrusage(RUSAGE_SELF, &usage);
-    return usage.ru_utime.tv_sec + usage.ru_utime.tv_usec / 1e6 +
-           usage.ru_stime.tv_sec + usage.ru_stime.tv_usec / 1e6;
+    FILETIME creation_time, exit_time, kernel_time, user_time;
+    if (GetProcessTimes(GetCurrentProcess(), &creation_time, &exit_time, &kernel_time, &user_time)) {
+        ULARGE_INTEGER kernel, user;
+        kernel.LowPart = kernel_time.dwLowDateTime;
+        kernel.HighPart = kernel_time.dwHighDateTime;
+        user.LowPart = user_time.dwLowDateTime;
+        user.HighPart = user_time.dwHighDateTime;
+        
+        return (kernel.QuadPart + user.QuadPart) / 10000000.0;
+    }
+    return 0.0;
 }
 
 double Metrics::get_memory_mb() {
-    std::ifstream status_file("/proc/self/status");
-    std::string line;
-    while (std::getline(status_file, line)) {
-        if (line.substr(0, 6) == "VmRSS:") {
-            std::istringstream iss(line.substr(6));
-            double kb;
-            iss >> kb;
-            return kb / 1024.0;
-        }
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+    if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc))) {
+        return pmc.WorkingSetSize / (1024.0 * 1024.0);
     }
     return 0.0;
 }

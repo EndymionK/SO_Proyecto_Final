@@ -4,21 +4,21 @@
     {
       "label": "CMake Configure",
       "type": "shell",
-      "command": "cmake -S . -B build -G \"Ninja\" -DCMAKE_BUILD_TYPE=Release",
+      "command": "$env:Path = 'C:\\msys64\\mingw64\\bin;' + $env:Path; cmake -S . -B build -G 'Ninja' -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++",
       "group": { "kind": "build", "isDefault": true },
       "presentation": { "reveal": "always" }
     },
     {
       "label": "CMake Build",
       "type": "shell",
-      "command": "cmake --build build -- -j$(nproc)",
+      "command": "$env:Path = 'C:\\msys64\\mingw64\\bin;' + $env:Path; cmake --build build",
       "group": "build",
       "presentation": { "reveal": "always" }
     },
     {
       "label": "Run miner (smoke)",
       "type": "shell",
-      "command": "bash -lc \"source ${workspaceFolder}/.venv/bin/activate && ./build/miner --mode sequential --difficulty 18 --threads 1 --timeout 10\"",
+      "command": "$env:Path = 'C:\\msys64\\mingw64\\bin;' + $env:Path; .\\build\\miner.exe --mode sequential --difficulty 18 --threads 1 --timeout 10 --metrics-out smoke_test.csv",
       "group": "test",
       "presentation": { "reveal": "always" }
     }

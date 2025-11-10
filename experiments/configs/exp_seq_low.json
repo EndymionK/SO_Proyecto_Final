@@ -1,11 +1,11 @@
 {
   "id": "exp_seq_low",
   "mode": "sequential",
-  "difficulty": 16,
+  "difficulty": 20,
   "threads": 1,
   "affinity": false,
-  "repetitions": 30,
-  "timeout": 60,
+  "repetitions": 5,
+  "timeout": 120,
   "seed": 42,
-  "notes": "Sequential baseline - low difficulty"
+  "notes": "Sequential baseline - difficulty 20"
 }

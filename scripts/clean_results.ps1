@@ -26,6 +26,7 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $RepoRoot = Resolve-Path (Join-Path $ScriptDir '..')
 
 $rawDir = Join-Path $RepoRoot 'results\raw'
+$metaDir = Join-Path $RepoRoot 'results\meta'
 $processedDir = Join-Path $RepoRoot 'results\processed'
 $exptsDir = Join-Path $RepoRoot 'results\experiments'
 $archiveRoot = Join-Path $RepoRoot 'archive'
@@ -43,8 +44,14 @@ function Confirm-Or-Exit($msg) {
 # Build list of targets
 $toRemove = @()
 if ($RemoveRaw -and (Test-Path $rawDir)) {
-    $rawFiles = Get-ChildItem -Path $rawDir -File -Filter '*.csv' -ErrorAction SilentlyContinue
+    # Remover TODOS los archivos en raw/ (CSVs, .proc.status, .cpu.stat, etc.)
+    $rawFiles = Get-ChildItem -Path $rawDir -File -Recurse -ErrorAction SilentlyContinue
     if ($rawFiles) { $toRemove += $rawFiles }
+}
+if ($RemoveRaw -and (Test-Path $metaDir)) {
+    # Remover archivos JSON de metadata
+    $metaFiles = Get-ChildItem -Path $metaDir -File -Recurse -ErrorAction SilentlyContinue
+    if ($metaFiles) { $toRemove += $metaFiles }
 }
 if ($RemoveProcessed -and (Test-Path $processedDir)) {
     $procFiles = Get-ChildItem -Path $processedDir -File -Recurse -ErrorAction SilentlyContinue

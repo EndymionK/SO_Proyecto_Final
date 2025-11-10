@@ -1,11 +1,11 @@
 {
   "id": "exp_con_4t_low",
   "mode": "concurrent",
-  "difficulty": 16,
+  "difficulty": 20,
   "threads": 4,
   "affinity": true,
-  "repetitions": 30,
-  "timeout": 60,
+  "repetitions": 5,
+  "timeout": 120,
   "seed": 42,
-  "notes": "Concurrent 4 threads (pinned to same CPU) - low difficulty"
+  "notes": "Concurrent 4 threads (pinned to same CPU) - difficulty 20"
 }

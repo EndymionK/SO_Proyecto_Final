@@ -1,11 +1,11 @@
 {
   "id": "exp_par_4t_low",
   "mode": "parallel",
-  "difficulty": 16,
+  "difficulty": 20,
   "threads": 4,
   "affinity": false,
-  "repetitions": 30,
-  "timeout": 60,
+  "repetitions": 5,
+  "timeout": 120,
   "seed": 42,
-  "notes": "Parallel 4 threads - low difficulty"
+  "notes": "Parallel 4 threads - difficulty 20"
 }

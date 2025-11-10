@@ -6,5 +6,8 @@
       "path": "/bin/bash"
     }
   },
-  "terminal.integrated.defaultProfile.linux": "bash"
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "files.associations": {
+    "atomic": "cpp"
+  }
 }

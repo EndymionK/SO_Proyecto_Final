@@ -13,18 +13,30 @@ __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
 
-# Results and data (archivos masivos)
+# Results and data (archivos masivos - no versionar)
+# Datos crudos de experimentos
 results/raw/
+results/raw/*.csv
 results/meta/
+results/meta/*.json
 results/experiments/
+
+# Datos procesados (generados por notebook)
+results/processed/
 results/processed/*.csv
 results/processed/*.txt
 results/processed/plots/
+results/processed/plots/*.png
+
+# Archivos temporales de métricas
 *.proc.csv
 *.proc.*.csv
 *.temp.csv
 *.cpu.stat
 *.meta.json
+
+# Info de experimentos (opcional - descomentar si quieres versionarlo)
+# results/EXPERIMENT_INFO.md
 
 # Logs
 *.log
@@ -48,3 +60,9 @@ Thumbs.db
 # Temporary files
 *.tmp
 .cache/
+# Mantener estructura de carpetas
+!results/.gitkeep
+!results/raw/.gitkeep
+!results/meta/.gitkeep
+!results/processed/.gitkeep
+!results/processed/plots/.gitkeep

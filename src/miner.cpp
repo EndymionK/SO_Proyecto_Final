@@ -5,8 +5,7 @@
 #include <thread>
 #include <vector>
 #include <atomic>
-#include <sched.h>
-#include <unistd.h>
+#include <windows.h>
 
 Miner::Miner(const Config& config) : config_(config) {}
 
@@ -179,19 +178,24 @@ MinerResult Miner::mine_concurrent() {
     auto timeout = std::chrono::seconds(config_.timeout_seconds);
     const uint64_t chunk_size = UINT64_MAX / num_threads;
     
-    int target_cpu = 0;
-    if (config_.affinity) {
-        target_cpu = sched_getcpu();
-        if (target_cpu < 0) target_cpu = 0;
+    DWORD_PTR process_affinity, system_affinity;
+    GetProcessAffinityMask(GetCurrentProcess(), &process_affinity, &system_affinity);
+    
+    DWORD target_cpu = 0;
+    if (config_.affinity && process_affinity != 0) {
+        for (DWORD i = 0; i < sizeof(DWORD_PTR) * 8; i++) {
+            if ((process_affinity & (1ULL << i)) != 0) {
+                target_cpu = i;
+                break;
+            }
+        }
     }
     
     for (uint32_t tid = 0; tid < num_threads; ++tid) {
         threads.emplace_back([&, tid, target_cpu]() {
             if (config_.affinity) {
-                cpu_set_t cpuset;
-                CPU_ZERO(&cpuset);
-                CPU_SET(target_cpu, &cpuset);
-                pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+                DWORD_PTR thread_affinity = 1ULL << target_cpu;
+                SetThreadAffinityMask(GetCurrentThread(), thread_affinity);
             }
             
             uint64_t start_nonce = config_.seed + tid * chunk_size;

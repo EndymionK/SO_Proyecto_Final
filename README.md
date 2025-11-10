@@ -20,11 +20,11 @@ Este proyecto implementa y evalúa experimentalmente un minero Proof-of-Work sim
 - [Guía Rápida](#guía-rápida-de-referencia)
 
 ## Resumen
-- **Lenguaje:** C++ (con `std::thread`, `std::atomic`, `pthread_setaffinity_np`)
+- **Lenguaje:** C++ (con `std::thread`, `std::atomic`, Windows Threading API)
 - **Hashing:** SHA-256 (OpenSSL)
 - **Métricas:** Throughput (hashes/s), tiempo, uso de CPU/memoria
 - **Análisis:** Python (pandas, scipy, matplotlib) para estadística y gráficas
-- **Plataforma recomendada:** Linux nativo o WSL2 (Ubuntu) en Windows
+- **Plataforma:** Windows nativo (MinGW-w64 + MSYS2)
 
 ---
 
@@ -42,18 +42,11 @@ cd SO_Proyecto_Final
 .\.venv\Scripts\Activate.ps1
 ```
 
-O en WSL/Linux:
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-### 3. Compilar el minero (WSL/Linux)
-```bash
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build build -- -j$(nproc)
+### 3. Compilar el minero (Windows nativo con MinGW)
+```powershell
+$env:Path = "C:\msys64\mingw64\bin;" + $env:Path
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++
+cmake --build build
 ```
 
 ### 4. Ejecutar experimentos completos (Windows PowerShell)
@@ -63,20 +56,31 @@ cmake --build build -- -j$(nproc)
 
 Este script:
 - Limpia resultados anteriores (opcional con `-Clean`)
-- Ejecuta todos los experimentos desde `experiments/configs/` (30 repeticiones por defecto)
-- Genera análisis estadístico y gráficas en `results/processed/`
-- Crea un reporte consolidado en `results/processed/REPORT.md`
+- Ejecuta todos los experimentos desde `experiments/configs/` (5 repeticiones por defecto)
+- Genera metadata del sistema en `results/EXPERIMENT_INFO.md`
 
-### 5. Revisar resultados
-- **Reporte completo:** `results/processed/REPORT.md`
-- **Resumen CSV:** `results/processed/summary.csv`
-- **Gráficas:** `results/processed/plots/`
-- **📊 Análisis interactivo (RECOMENDADO):** `notebooks/analysis.ipynb`
+### 5. Analizar resultados con el notebook
+```powershell
+# Activar entorno Python si no está activo
+.\.venv\Scripts\Activate.ps1
 
-Para análisis completo con visualizaciones:
-```bash
-jupyter notebook notebooks/analysis.ipynb
+# Abrir Jupyter Notebook
+jupyter notebook notebooks/analisis_rendimiento.ipynb
 ```
+
+En el notebook:
+1. Ejecuta todas las celdas (Cell > Run All)
+2. El notebook generará automáticamente:
+   - **Summary CSV:** `results/processed/summary.csv`
+   - **Estadísticas:** `results/processed/statistical_summary.txt`
+   - **Config stats:** `results/processed/config_stats.csv`
+   - **Gráficas:** `results/processed/plots/*.png`
+
+### 6. Revisar resultados
+- **📊 Análisis completo:** `notebooks/analisis_rendimiento.ipynb` (recomendado)
+- **Metadata del sistema:** `results/EXPERIMENT_INFO.md`
+- **Datos crudos:** `results/raw/*.csv`
+- **Resultados procesados:** `results/processed/`
 
 ---
 
@@ -92,19 +96,17 @@ SO_Proyecto_Final/
 ├── experiments/configs/    # Configuraciones JSON de experimentos
 ├── scripts/
 │   ├── run_all_modes.ps1   # Orquestador maestro (Windows/PowerShell)
-│   ├── run_experiment.sh   # Ejecuta un experimento individual (Bash)
-│   ├── collect_proc_metrics.sh  # Captura métricas de proceso
-│   ├── parse_results.py    # Agrega y analiza resultados
+│   ├── Run-Experiment.ps1  # Ejecuta un experimento individual
+│   ├── Collect-ProcessMetrics.ps1  # Captura métricas de proceso
 │   ├── setup_env.ps1       # Configura entorno Python (Windows)
 │   └── clean_results.ps1   # Limpia resultados anteriores
 ├── notebooks/
-│   └── analysis.ipynb      # Análisis interactivo en Jupyter
-├── tests/
-│   └── smoke_test.sh       # Prueba básica de compilación/ejecución
+│   └── analisis_rendimiento.ipynb  # Análisis completo (PROCESAMIENTO MANUAL)
 ├── results/
 │   ├── raw/                # CSVs crudos de cada ejecución
-│   ├── processed/          # Resúmenes, estadísticas y gráficas
-│   └── experiments/        # Carpetas por experimento (metadata)
+│   ├── meta/               # Metadata de experimentos
+│   ├── processed/          # Resúmenes, estadísticas y gráficas (generados por notebook)
+│   └── EXPERIMENT_INFO.md  # Metadata del sistema
 ├── CMakeLists.txt
 ├── requirements.txt        # Dependencias Python
 ├── README.md               # Este archivo
@@ -118,21 +120,28 @@ SO_Proyecto_Final/
 ## Requisitos
 
 ### Sistema operativo
-- **Linux nativo** (recomendado) o **WSL2** en Windows
-- Windows PowerShell 5.1+ (para scripts `.ps1`)
+- **Windows** con MinGW-w64 (MSYS2)
+- Windows PowerShell 5.1+
 
 ### Compilación (C++)
-- GCC/G++ 7+ con soporte C++17
+- MinGW-w64 GCC 7+ con soporte C++17
 - CMake 3.10+
-- Ninja (opcional pero recomendado)
-- OpenSSL dev headers (`libssl-dev` en Ubuntu)
+- Ninja build system
+- OpenSSL (incluido en MSYS2)
+
+Instalar toolchain:
+```powershell
+# Descargar MSYS2 desde https://www.msys2.org/
+# En terminal MSYS2:
+pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-openssl
+```
 
 ### Análisis (Python)
 - Python 3.7+
 - pandas, scipy, matplotlib, seaborn, jupyter
 
 Instala con:
-```bash
+```powershell
 pip install -r requirements.txt
 ```
 
@@ -141,8 +150,8 @@ pip install -r requirements.txt
 ## Uso avanzado
 
 ### Ejecutar un experimento individual
-```bash
-./scripts/run_experiment.sh experiments/configs/exp_seq_low.json
+```powershell
+.\scripts\Run-Experiment.ps1 -ConfigPath experiments\configs\exp_seq_low.json
 ```
 
 ### Limpiar resultados anteriores
@@ -151,53 +160,37 @@ pip install -r requirements.txt
 ```
 
 ### Ejecutar prueba rápida (smoke test)
-```bash
-./tests/smoke_test.sh
+```powershell
+$env:Path = "C:\msys64\mingw64\bin;" + $env:Path
+.\build\miner.exe --mode sequential --difficulty 18 --threads 1 --timeout 10 --metrics-out smoke_test.csv
 ```
 
 ### Análisis manual de resultados
-```bash
-source .venv/bin/activate
-python scripts/parse_results.py --raw-dir results/raw --out-dir results/processed
-```
+1. Ejecutar experimentos con `.\scripts\run_all_modes.ps1`
+2. Abrir el notebook: `notebooks\analisis_rendimiento.ipynb`
+3. Ejecutar todas las celdas (Run All) para generar análisis completo
 
 ### Ejecutar el minero directamente
 
 #### Modo Sequential (baseline)
-```bash
-./build/miner \
-  --mode sequential \
-  --difficulty 18 \
-  --threads 1 \
-  --timeout 60 \
-  --seed 42 \
-  --metrics-out results/raw/manual_seq.csv
+```powershell
+$env:Path = "C:\msys64\mingw64\bin;" + $env:Path
+.\build\miner.exe --mode sequential --difficulty 18 --threads 1 --timeout 60 --seed 42 --metrics-out results\raw\manual_seq.csv
 ```
 
 #### Modo Parallel (4 hilos en múltiples núcleos)
-```bash
-./build/miner \
-  --mode parallel \
-  --difficulty 18 \
-  --threads 4 \
-  --timeout 60 \
-  --seed 42 \
-  --metrics-out results/raw/manual_par.csv
+```powershell
+$env:Path = "C:\msys64\mingw64\bin;" + $env:Path
+.\build\miner.exe --mode parallel --difficulty 18 --threads 4 --timeout 60 --seed 42 --metrics-out results\raw\manual_par.csv
 ```
 
 #### Modo Concurrent (2 hilos con CPU pinning)
-```bash
-./build/miner \
-  --mode concurrent \
-  --difficulty 18 \
-  --threads 2 \
-  --affinity true \
-  --timeout 60 \
-  --seed 42 \
-  --metrics-out results/raw/manual_con.csv
+```powershell
+$env:Path = "C:\msys64\mingw64\bin;" + $env:Path
+.\build\miner.exe --mode concurrent --difficulty 18 --threads 2 --affinity true --timeout 60 --seed 42 --metrics-out results\raw\manual_con.csv
 ```
 
-**Nota:** El modo concurrent con `--affinity true` fija todos los hilos al CPU 0 para simular ejecución concurrente en un solo núcleo.
+**Nota:** El modo concurrent con `--affinity true` fija todos los hilos a un solo CPU para simular ejecución concurrente en un núcleo.
 
 #### Opciones CLI disponibles
 
@@ -264,63 +257,71 @@ nano experiments/configs/exp_custom.json
 
 El proyecto incluye un **notebook Jupyter interactivo** que centraliza TODO el análisis estadístico:
 
-### 📊 `notebooks/analysis.ipynb`
+### 📊 `notebooks/analisis_rendimiento.ipynb`
 
 **Contenido completo:**
 
 1. **Carga de Datos**
-   - Datos agregados y raw de todas las ejecuciones
-   - Validación de integridad (210 ejecuciones)
+   - Agregación automática de todos los CSVs en `results/raw/`
+   - Normalización de nombres de columnas
+   - Validación de integridad
 
 2. **Estadísticas Descriptivas**
-   - Tablas resumen por modo y threads
-   - Speedup y eficiencia relativa a baseline
-   - Coeficiente de variación (CV)
+   - Tablas resumen por modo, threads y dificultad
+   - Distribución de métricas (throughput, tiempo, CPU, memoria)
+   - Conteo de ejecuciones por configuración
 
-3. **Análisis Estadístico**
-   - ANOVA paramétrico (f_oneway)
-   - Kruskal-Wallis no paramétrico
-   - Mann-Whitney U con corrección de Bonferroni
-   - Interpretación automática de significancia
+3. **Análisis Comparativo por Modo**
+   - Comparación Sequential vs Parallel vs Concurrent
+   - Speedup relativo al baseline (Sequential)
+   - Análisis por número de hilos
 
-4. **Visualizaciones Interactivas**
-   - Throughput vs Threads (con barras de error)
-   - Speedup vs Threads (comparado con ideal lineal)
-   - Eficiencia vs Threads (porcentaje de uso efectivo)
-   - Boxplots de distribución por modo
+4. **Speedup y Eficiencia**
+   - Cálculo de speedup real vs ideal (lineal)
+   - Eficiencia de paralelización (%)
+   - Gráficas comparativas con línea ideal
 
-5. **Validación y Detección de Anomalías**
-   - Verificación de ejecuciones exitosas
-   - Detección de outliers (método IQR)
-   - Análisis de super-linear speedup
+5. **Análisis Estadístico Riguroso**
+   - **ANOVA** paramétrico (f_oneway)
+   - **Kruskal-Wallis** no paramétrico
+   - **Mann-Whitney U** con corrección de Bonferroni
+   - Interpretación automática de significancia (p < 0.001, p < 0.05)
 
-6. **Conclusiones y Análisis Crítico**
-   - Evaluación detallada de cada modo
-   - Comparación de escalabilidad
-   - Interpretación teórica vs resultados empíricos
-   - Identificación de overhead de sincronización
+6. **Visualizaciones Completas**
+   - Throughput vs Threads por modo
+   - Speedup y eficiencia vs ideal
+   - Boxplots y violin plots de distribuciones
+   - Gráfico de barras con error bars (desviación estándar)
+   - Heatmap threads × modo
+   - Scatter plot tiempo vs memoria
 
-7. **Resumen Ejecutivo**
-   - Conclusiones finales para informe académico
-   - Lecciones aprendidas
-   - Recomendaciones de diseño
+7. **Resumen Ejecutivo Automatizado**
+   - Mejor configuración detectada
+   - Comparación Parallel vs Concurrent
+   - Recomendaciones basadas en resultados
+   - Análisis del impacto de CPU pinning
+
+8. **Exportación de Resultados**
+   - `results/processed/summary.csv` — Speedup y eficiencia
+   - `results/processed/config_stats.csv` — Estadísticas por configuración
+   - `results/processed/statistical_summary.txt` — Tests estadísticos
+   - `results/processed/plots/*.png` — 5 gráficas de alta resolución (300 DPI)
 
 ### Uso del Notebook
 
-```bash
-# Activar entorno
-source .venv/bin/activate  # Linux/WSL
-# o
+```powershell
+# Activar entorno Python
 .\.venv\Scripts\Activate.ps1  # Windows PowerShell
 
 # Iniciar Jupyter
-jupyter notebook notebooks/analysis.ipynb
+jupyter notebook notebooks\analisis_rendimiento.ipynb
 ```
 
 En VS Code:
-1. Abrir `notebooks/analysis.ipynb`
+1. Abrir `notebooks\analisis_rendimiento.ipynb`
 2. Seleccionar kernel Python 3.13
-3. Ejecutar todas las celdas (Run All)
+3. Ejecutar todas las celdas (Cell > Run All)
+4. Los resultados procesados se guardarán automáticamente en `results/processed/`
 
 ### Resultados Principales
 
@@ -346,12 +347,12 @@ En VS Code:
 
 | Archivo | Descripción | Uso |
 |---------|-------------|-----|
-| `notebooks/analysis.ipynb` | **Análisis completo interactivo** | ✅ USAR ESTE |
-| `results/processed/summary.csv` | Datos agregados (fuente) | Referencia |
-| `results/processed/REPORT.md` | Reporte consolidado | Revisión rápida |
-| `results/processed/stats_summary.*` | Archivos redundantes | Ignorar |
+| `notebooks/analisis_rendimiento.ipynb` | **Análisis completo interactivo** | ✅ USAR ESTE |
+| `results/processed/summary.csv` | Speedup y eficiencia (generado por notebook) | Referencia |
+| `results/processed/statistical_summary.txt` | Tests estadísticos (generado por notebook) | Revisión rápida |
+| `results/EXPERIMENT_INFO.md` | Metadata del sistema | Contexto |
 
-**Recomendación:** Usar el notebook para análisis detallado y generación de gráficas para el informe.
+**Recomendación:** Ejecutar el notebook para generar todo el análisis automáticamente.
 
 ---
 
@@ -600,9 +601,9 @@ pip install -r requirements.txt --force-reinstall
 
 ### Notebook no encuentra datos
 Asegúrate de ejecutar desde la raíz del proyecto:
-```bash
-cd /ruta/al/SO_Proyecto_Final
-jupyter notebook notebooks/analysis.ipynb
+```powershell
+cd C:\ruta\al\SO_Proyecto_Final
+jupyter notebook notebooks\analisis_rendimiento.ipynb
 ```
 
 ### Gráficas no se muestran en el notebook
@@ -625,20 +626,18 @@ Este proyecto es de uso académico para el curso de Sistemas Operativos.
 
 ### Comandos Esenciales
 
-```bash
+```powershell
 # 1. Setup completo (primera vez)
-.\scripts\setup_env.ps1                    # Windows
+.\scripts\setup_env.ps1                    # Windows - Setup Python
+$env:Path = "C:\msys64\mingw64\bin;" + $env:Path
 cmake -S . -B build -G Ninja               # Compilar
-.\scripts\run_all_modes.ps1 -Clean         # Ejecutar todo
+.\scripts\run_all_modes.ps1 -Clean         # Ejecutar experimentos
 
 # 2. Análisis
-jupyter notebook notebooks/analysis.ipynb  # Abrir notebook
+jupyter notebook notebooks\analisis_rendimiento.ipynb  # Abrir notebook y Run All
 
 # 3. Limpieza
-.\scripts\clean_results.ps1 -Archive       # Archivar y limpiar
-
-# 4. Prueba rápida
-./tests/smoke_test.sh                      # Verificar que funciona
+.\scripts\clean_results.ps1 -Force         # Limpiar resultados
 ```
 
 ### Estructura de Archivos Clave
@@ -655,51 +654,56 @@ SO_Proyecto_Final/
 ├── experiments/configs/         ← 7 configuraciones JSON
 ├── scripts/
 │   ├── run_all_modes.ps1       ← 🚀 Ejecutor maestro (PowerShell)
-│   ├── run_experiment.sh       ← Ejecución individual (Bash)
-│   ├── collect_proc_metrics.sh ← Monitor de proceso
-│   ├── parse_results.py        ← Análisis automático
+│   ├── Run-Experiment.ps1      ← Ejecución individual
+│   ├── Collect-ProcessMetrics.ps1 ← Monitor de proceso
 │   ├── setup_env.ps1           ← Setup Python (Windows)
 │   └── clean_results.ps1       ← Limpieza
 ├── notebooks/
-│   └── analysis.ipynb          ← 📊 ANÁLISIS ESTADÍSTICO COMPLETO
-├── tests/
-│   └── smoke_test.sh           ← Prueba básica
+│   └── analisis_rendimiento.ipynb ← 📊 ANÁLISIS COMPLETO (procesamiento manual)
 ├── results/
-│   ├── raw/                    ← 210 CSVs de ejecuciones
-│   └── processed/              ← Resúmenes, stats, gráficas
+│   ├── raw/                    ← CSVs de ejecuciones
+│   ├── meta/                   ← Metadata JSON
+│   ├── processed/              ← Generados por notebook (summary, stats, plots)
+│   └── EXPERIMENT_INFO.md      ← Metadata del sistema
 ├── CMakeLists.txt              ← Configuración de compilación
 ├── requirements.txt            ← Dependencias Python
-├── CUMPLIMIENTO.md             ← Verificación de requisitos
 └── instrucciones.md            ← Enunciado del proyecto
 ```
 
 ### Flujo de Trabajo Típico
 
 1. **Desarrollo/Modificación:**
-   ```bash
+   ```powershell
    # Editar código en src/
+   $env:Path = "C:\msys64\mingw64\bin;" + $env:Path
    cmake --build build
+   ```
    ./tests/smoke_test.sh
    ```
 
 2. **Experimentos Completos:**
    ```powershell
    .\scripts\run_all_modes.ps1 -Clean
-   # Esperar 10-15 minutos
+   # Esperar según configuración (5 reps aprox 5-10 min)
    ```
 
 3. **Análisis e Informe:**
-   ```bash
-   jupyter notebook notebooks/analysis.ipynb
-   # Ejecutar todas las celdas
-   # Exportar gráficas para el informe
+   ```powershell
+   # Activar entorno
+   .\.venv\Scripts\Activate.ps1
+   
+   # Abrir notebook
+   jupyter notebook notebooks\analisis_rendimiento.ipynb
+   
+   # En el notebook: Cell > Run All
+   # Los resultados procesados se guardan automáticamente en results/processed/
    ```
 
-4. **Limpieza:**
+4. **Limpieza (opcional):**
    ```powershell
-   .\scripts\clean_results.ps1 -Archive
+   .\scripts\clean_results.ps1 -Force
    ```
 
 ---
 
-*Para verificación de cumplimiento de requisitos, consulta `CUMPLIMIENTO.md`. Enunciado completo en `instrucciones.md`.*
+*Para enunciado completo, consulta `instrucciones.md`.*
