@@ -31,7 +31,7 @@ Este proyecto implementa y evalúa experimentalmente un minero Proof-of-Work sim
 ## Inicio rápido (flujo completo)
 
 ### 1. Clonar el repositorio
-```bash
+```powershell
 git clone <repo-url>
 cd SO_Proyecto_Final
 ```
@@ -238,15 +238,15 @@ Los experimentos se definen en archivos JSON en `experiments/configs/`:
 
 #### Crear nuevo experimento
 
-```bash
+```powershell
 # Copiar template
-cp experiments/configs/exp_seq_low.json experiments/configs/exp_custom.json
+Copy-Item experiments\configs\exp_seq_low.json experiments\configs\exp_custom.json
 
-# Editar parámetros
-nano experiments/configs/exp_custom.json
+# Editar parámetros con tu editor favorito
+notepad experiments\configs\exp_custom.json
 
 # Ejecutar
-./scripts/run_experiment.sh experiments/configs/exp_custom.json
+.\scripts\Run-Experiment.ps1 -ConfigPath experiments\configs\exp_custom.json
 ```
 
 ---
@@ -371,11 +371,11 @@ std::string sha256(const std::string& input);
 Calcula el hash SHA-256 de una cadena y retorna representación hexadecimal.
 
 #### 2. Sistema de Métricas (`metrics.h/cpp`)
-Recolección de métricas de sistema y exportación a CSV.
+Recolección de métricas de sistema y exportación a CSV usando **Windows API nativo**.
 
 **Métodos principales:**
-- `get_cpu_time()`: Obtiene tiempo de CPU usando `getrusage(RUSAGE_SELF)`
-- `get_memory_mb()`: Lee memoria RSS desde `/proc/self/status`
+- `get_cpu_time()`: Obtiene tiempo de CPU usando `GetProcessTimes()` (Windows API)
+- `get_memory_mb()`: Lee memoria de trabajo (Working Set) usando `GetProcessMemoryInfo()` (Windows API)
 - `export_to_csv()`: Exporta resultados en formato CSV estándar
 
 #### 3. Clase Miner (`miner.h/cpp`)
@@ -437,22 +437,36 @@ void mine_parallel(uint64_t start_nonce, int num_threads) {
 ```
 
 #### Concurrent
-- **N hilos fijados al mismo núcleo** usando `pthread_setaffinity_np`
+- **N hilos fijados al mismo núcleo** usando `SetThreadAffinityMask()` (Windows API)
 - Simula concurrencia mediante context switching del scheduler
 - Todos los hilos compiten por el mismo core
 - Permite medir overhead de sincronización vs. modo secuencial
 - **Rendimiento:** ~708k hashes/s con 4 threads (speedup 1.12×, apenas mejor que sequential)
 
-**CPU Pinning:**
+**CPU Pinning (Windows API):**
 ```cpp
 void mine_concurrent(uint64_t start_nonce, int num_threads) {
+    // Detectar CPU disponible
+    DWORD_PTR process_affinity, system_affinity;
+    GetProcessAffinityMask(GetCurrentProcess(), &process_affinity, &system_affinity);
+    
+    DWORD target_cpu = 0;  // CPU 0 por defecto
+    if (config_.affinity && process_affinity != 0) {
+        for (DWORD i = 0; i < sizeof(DWORD_PTR) * 8; i++) {
+            if ((process_affinity & (1ULL << i)) != 0) {
+                target_cpu = i;
+                break;
+            }
+        }
+    }
+    
     for (int i = 0; i < num_threads; i++) {
-        threads.emplace_back([&, i]() {
-            // Fijar al CPU 0
-            cpu_set_t cpuset;
-            CPU_ZERO(&cpuset);
-            CPU_SET(0, &cpuset);
-            pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+        threads.emplace_back([&, i, target_cpu]() {
+            // Fijar al CPU target_cpu usando Windows API
+            if (config_.affinity) {
+                DWORD_PTR thread_affinity = 1ULL << target_cpu;
+                SetThreadAffinityMask(GetCurrentThread(), thread_affinity);
+            }
             
             // Minería igual que parallel
             // ...
@@ -509,8 +523,8 @@ bool check_difficulty(const std::string& hash_hex, int difficulty) {
 | `nonce` | Valor del nonce | uint64_t | uint64_t |
 | `total_hashes` | Total de hashes calculados | Contador | uint64_t |
 | `elapsed_s` | Tiempo wall-clock | `std::chrono::steady_clock` | double |
-| `cpu_time_s` | Tiempo de CPU | `getrusage(RUSAGE_SELF)` | double |
-| `memory_mb` | Memoria RSS | `/proc/self/status` (VmRSS) | double |
+| `cpu_time_s` | Tiempo de CPU | `GetProcessTimes()` (Windows API) | double |
+| `memory_mb` | Memoria de trabajo | `GetProcessMemoryInfo()` (Windows API) | double |
 | `hashes_per_second` | Throughput | `total_hashes / elapsed_s` | double |
 
 **Formato CSV de salida:**
@@ -558,43 +572,24 @@ exp_001,parallel,16,4,false,true,688,1321,0.011,0.007,6.62,118270
 
 ## Soporte y troubleshooting
 
-### Error: miner not found
+### Error: miner.exe not found
 Compila el proyecto primero:
-```bash
+```powershell
+$env:Path = "C:\msys64\mingw64\bin;" + $env:Path
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
 
 ### Error: pandas not found
 Activa el entorno virtual e instala dependencias:
-```bash
-source .venv/bin/activate
+```powershell
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-```
-
-### WSL: problemas con venv en /mnt
-Crea el venv en el filesystem WSL (home):
-```bash
-cd ~
-cp -a /mnt/c/d/Proyectos_programacion/SO_Proyecto_Final ~/SO_Proyecto_Final
-cd ~/SO_Proyecto_Final
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-O configura permisos en `/etc/wsl.conf`:
-```bash
-sudo tee /etc/wsl.conf > /dev/null <<'EOF'
-[automount]
-options = "metadata"
-EOF
-# Desde PowerShell: wsl --shutdown
-# Luego reabrir WSL
 ```
 
 ### Conflictos de dependencias Python
-```bash
+```powershell
+.\.venv\Scripts\Activate.ps1
 pip install --upgrade pip
 pip install -r requirements.txt --force-reinstall
 ```
@@ -602,7 +597,8 @@ pip install -r requirements.txt --force-reinstall
 ### Notebook no encuentra datos
 Asegúrate de ejecutar desde la raíz del proyecto:
 ```powershell
-cd C:\ruta\al\SO_Proyecto_Final
+cd C:\d\Proyectos_programacion\SO_Proyecto_Final
+.\.venv\Scripts\Activate.ps1
 jupyter notebook notebooks\analisis_rendimiento.ipynb
 ```
 
@@ -677,8 +673,9 @@ SO_Proyecto_Final/
    # Editar código en src/
    $env:Path = "C:\msys64\mingw64\bin;" + $env:Path
    cmake --build build
-   ```
-   ./tests/smoke_test.sh
+   
+   # Ejecutar prueba rápida
+   .\build\miner.exe --mode sequential --difficulty 18 --threads 1 --timeout 10
    ```
 
 2. **Experimentos Completos:**
@@ -705,5 +702,3 @@ SO_Proyecto_Final/
    ```
 
 ---
-
-*Para enunciado completo, consulta `instrucciones.md`.*
