@@ -1,0 +1,11 @@
+{
+  "id": "exp_par_2t_high",
+  "mode": "parallel",
+  "difficulty": 24,
+  "threads": 2,
+  "affinity": false,
+  "repetitions": 5,
+  "timeout": 240,
+  "seed": 42,
+  "notes": "Parallel 2 threads - difficulty 24 (high)"
+}

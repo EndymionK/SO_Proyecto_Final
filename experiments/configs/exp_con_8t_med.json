@@ -1,0 +1,11 @@
+{
+  "id": "exp_con_8t_med",
+  "mode": "concurrent",
+  "difficulty": 22,
+  "threads": 8,
+  "affinity": true,
+  "repetitions": 5,
+  "timeout": 180,
+  "seed": 42,
+  "notes": "Concurrent 8 threads (pinned to same CPU) - difficulty 22 (medium)"
+}
