@@ -1,8 +1,28 @@
-# Build artifacts
+# Build artifacts (CMake + Ninja)
 build/
+*.exe
 *.o
+*.obj
 *.so
 *.a
+*.dll
+*.dylib
+*.lib
+*.exp
+*.ilk
+*.pdb
+*.idb
+
+# CMake cache and generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+.ninja_deps
+.ninja_log
+build.ninja
+rules.ninja
 
 # Python
 .venv/
@@ -13,30 +33,12 @@ __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
 
-# Results and data (archivos masivos - no versionar)
-# Datos crudos de experimentos
-results/raw/
-results/raw/*.csv
-results/meta/
-results/meta/*.json
-results/experiments/
-
-# Datos procesados (generados por notebook)
-results/processed/
-results/processed/*.csv
-results/processed/*.txt
-results/processed/plots/
-results/processed/plots/*.png
-
 # Archivos temporales de métricas
 *.proc.csv
 *.proc.*.csv
 *.temp.csv
 *.cpu.stat
 *.meta.json
-
-# Info de experimentos (opcional - descomentar si quieres versionarlo)
-# results/EXPERIMENT_INFO.md
 
 # Logs
 *.log
@@ -60,9 +62,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 .cache/
-# Mantener estructura de carpetas
+# Mantener estructura de carpetas base
 !results/.gitkeep
-!results/raw/.gitkeep
-!results/meta/.gitkeep
-!results/processed/.gitkeep
-!results/processed/plots/.gitkeep
+!results/README.md
