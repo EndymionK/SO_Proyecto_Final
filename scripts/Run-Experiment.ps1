@@ -1,6 +1,9 @@
 param(
     [Parameter(Mandatory=$true)]
-    [string]$ConfigPath
+    [string]$ConfigPath,
+    
+    [Parameter(Mandatory=$false)]
+    [string]$ExperimentPath = ""
 )
 
 $ErrorActionPreference = 'Stop'
@@ -12,8 +15,17 @@ if (-not (Test-Path $ConfigPath)) {
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $ScriptDir
-$ResultsRaw = Join-Path $RepoRoot "results\raw"
-$ResultsMeta = Join-Path $RepoRoot "results\meta"
+
+# Determinar rutas de salida
+if ($ExperimentPath -and $ExperimentPath -ne "") {
+    $ResultsRaw = Join-Path $ExperimentPath "raw"
+    $ResultsMeta = Join-Path $ExperimentPath "meta"
+} else {
+    # Fallback a estructura antigua
+    $ResultsRaw = Join-Path $RepoRoot "results\raw"
+    $ResultsMeta = Join-Path $RepoRoot "results\meta"
+}
+
 $MinerExe = Join-Path $RepoRoot "build\miner.exe"
 $CollectorScript = Join-Path $ScriptDir "Collect-ProcessMetrics.ps1"
 

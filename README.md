@@ -22,6 +22,8 @@ Este proyecto implementa y evalúa experimentalmente un minero Proof-of-Work sim
 ## Resumen
 - **Lenguaje:** C++ (con `std::thread`, `std::atomic`, Windows Threading API)
 - **Hashing:** SHA-256 (OpenSSL)
+- **Configuraciones:** 21 experimentos (3 modos × 4 niveles hilos × 3 dificultades)
+- **Repeticiones:** 5 ejecuciones por configuración (105 muestras totales)
 - **Métricas:** Throughput (hashes/s), tiempo, uso de CPU/memoria
 - **Análisis:** Python (pandas, scipy, matplotlib) para estadística y gráficas
 - **Plataforma:** Windows nativo (MinGW-w64 + MSYS2)
@@ -49,15 +51,40 @@ cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=g++
 cmake --build build
 ```
 
-### 4. Ejecutar experimentos completos (Windows PowerShell)
+### 4. Ejecutar todos los experimentos (Windows PowerShell)
 ```powershell
 .\scripts\run_all_modes.ps1 -Clean
 ```
 
-Este script:
-- Limpia resultados anteriores (opcional con `-Clean`)
-- Ejecuta todos los experimentos desde `experiments/configs/` (5 repeticiones por defecto)
-- Genera metadata del sistema en `results/EXPERIMENT_INFO.md`
+Este script ejecuta **automáticamente** las 21 configuraciones experimentales:
+- **Crea** carpeta de experimento: `results/Experiment_fecha_procesador_ram/`
+- **Limpia** resultados anteriores en esa carpeta (con `-Clean`)
+- **Ejecuta** 21 configuraciones × 5 repeticiones = **105 ejecuciones**
+- **Tiempo estimado:** 10-15 minutos (depende del hardware)
+- **Genera** metadata del sistema en `results/Experiment_*/EXPERIMENT_INFO.md`
+
+**Estructura de resultados:**
+```
+results/
+└── Experiment_20251202_143025_AMD_Ryzen_7_5700X_32GB/
+    ├── EXPERIMENT_INFO.md          # Metadata del sistema
+    ├── raw/                        # CSVs de ejecuciones
+    │   ├── exp_seq_low_run_*.csv
+    │   └── ...
+    └── meta/                       # Metadata JSON
+        ├── exp_seq_low_run_*.meta.json
+        └── ...
+```
+
+**Configuraciones incluidas:**
+- Sequential: 3 configuraciones (1 hilo, dificultad LOW/MED/HIGH)
+- Concurrent: 9 configuraciones (2/4/8 hilos, dificultad LOW/MED/HIGH, CPU pinning)
+- Parallel: 9 configuraciones (2/4/8 hilos, dificultad LOW/MED/HIGH, multi-core)
+
+**Dificultades:**
+- LOW (20 bits): ~0.4s por ejecución
+- MED (22 bits): ~2s por ejecución
+- HIGH (24 bits): ~12s por ejecución
 
 ### 5. Analizar resultados con el notebook
 ```powershell
@@ -68,19 +95,40 @@ Este script:
 jupyter notebook notebooks/analisis_rendimiento.ipynb
 ```
 
+**Configuración del notebook:**
+- Por defecto analiza **todas** las carpetas `Experiment_*` disponibles
+- Si hay múltiples carpetas, calcula **promedios** entre sistemas
+- Puedes configurar para analizar solo la carpeta más reciente o carpetas específicas
+
+Ver celda de configuración en el notebook (`EXPERIMENT_FOLDERS`).
+
 En el notebook:
-1. Ejecuta todas las celdas (Cell > Run All)
-2. El notebook generará automáticamente:
-   - **Summary CSV:** `results/processed/summary.csv`
-   - **Estadísticas:** `results/processed/statistical_summary.txt`
-   - **Config stats:** `results/processed/config_stats.csv`
-   - **Gráficas:** `results/processed/plots/*.png`
+1. Configura `EXPERIMENT_FOLDERS` (opcional):
+   - `None`: Analizar todas las carpetas (por defecto)
+   - `"latest"`: Solo la carpeta más reciente
+   - `["Experiment_..."]`: Carpetas específicas
+2. Ejecuta todas las celdas (Cell > Run All)
+3. Explora gráficas y resultados interactivos
+
+**Análisis incluidos:**
+- Comparación de modos (Sequential/Concurrent/Parallel)
+- Análisis por dificultad (LOW/MED/HIGH)
+- Análisis por número de hilos (1/2/4/8)
+- Speedup y eficiencia vs ideal lineal
+- Tests estadísticos (ANOVA, Kruskal-Wallis, Mann-Whitney U)
 
 ### 6. Revisar resultados
-- **📊 Análisis completo:** `notebooks/analisis_rendimiento.ipynb` (recomendado)
-- **Metadata del sistema:** `results/EXPERIMENT_INFO.md`
-- **Datos crudos:** `results/raw/*.csv`
-- **Resultados procesados:** `results/processed/`
+
+Cada ejecución crea una carpeta de experimento con formato:
+```
+results/Experiment_fecha_procesador_ram/
+```
+
+Dentro de cada carpeta:
+- **📊 Análisis completo:** Ejecutar `notebooks/analisis_rendimiento.ipynb` apuntando a esta carpeta
+- **Metadata del sistema:** `EXPERIMENT_INFO.md`
+- **Datos crudos:** `raw/*.csv`
+- **Metadata JSON:** `meta/*.meta.json`
 
 ---
 
@@ -93,7 +141,7 @@ SO_Proyecto_Final/
 │   ├── metrics.cpp/h
 │   ├── config.h
 │   └── sha256_hash.cpp/h
-├── experiments/configs/    # Configuraciones JSON de experimentos
+├── experiments/configs/    # 21 configuraciones JSON (3 modos × 4 hilos × 3 dificultades)
 ├── scripts/
 │   ├── run_all_modes.ps1   # Orquestador maestro (Windows/PowerShell)
 │   ├── Run-Experiment.ps1  # Ejecuta un experimento individual
@@ -103,10 +151,10 @@ SO_Proyecto_Final/
 ├── notebooks/
 │   └── analisis_rendimiento.ipynb  # Análisis completo (PROCESAMIENTO MANUAL)
 ├── results/
-│   ├── raw/                # CSVs crudos de cada ejecución
-│   ├── meta/               # Metadata de experimentos
-│   ├── processed/          # Resúmenes, estadísticas y gráficas (generados por notebook)
-│   └── EXPERIMENT_INFO.md  # Metadata del sistema
+│   └── Experiment_fecha_procesador_ram/  # Carpeta por cada ejecución maestra
+│       ├── raw/            # CSVs crudos de cada ejecución
+│       ├── meta/           # Metadata JSON de experimentos
+│       └── EXPERIMENT_INFO.md  # Metadata del sistema
 ├── CMakeLists.txt
 ├── requirements.txt        # Dependencias Python
 ├── README.md               # Este archivo
@@ -149,6 +197,23 @@ pip install -r requirements.txt
 
 ## Uso avanzado
 
+### Ejecutar todos los experimentos
+```powershell
+.\scripts\run_all_modes.ps1 -Clean
+```
+
+Este es el método principal para obtener resultados completos. Ejecuta las 21 configuraciones × 5 repeticiones (105 ejecuciones totales).
+
+**Organización de resultados:** Cada ejecución crea una carpeta única en `results/` con formato:
+```
+Experiment_YYYYMMDD_HHMMSS_NombreCPU_RAM
+```
+
+Esto permite:
+- Ejecutar experimentos en múltiples PCs sin conflictos
+- Comparar resultados entre diferentes sistemas
+- Mantener histórico de ejecuciones
+
 ### Ejecutar un experimento individual
 ```powershell
 .\scripts\Run-Experiment.ps1 -ConfigPath experiments\configs\exp_seq_low.json
@@ -165,10 +230,14 @@ $env:Path = "C:\msys64\mingw64\bin;" + $env:Path
 .\build\miner.exe --mode sequential --difficulty 18 --threads 1 --timeout 10 --metrics-out smoke_test.csv
 ```
 
-### Análisis manual de resultados
+### Análisis de resultados
 1. Ejecutar experimentos con `.\scripts\run_all_modes.ps1`
 2. Abrir el notebook: `notebooks\analisis_rendimiento.ipynb`
-3. Ejecutar todas las celdas (Run All) para generar análisis completo
+3. Configurar `EXPERIMENT_FOLDERS` (opcional):
+   - `None`: Analiza todas las carpetas (por defecto)
+   - `"latest"`: Solo la carpeta más reciente
+   - `["Experiment_..."]`: Carpetas específicas
+4. Ejecutar todas las celdas (Run All) para ver análisis completo interactivo
 
 ### Ejecutar el minero directamente
 
@@ -226,13 +295,13 @@ Los experimentos se definen en archivos JSON en `experiments/configs/`:
 
 - **id**: Identificador único del experimento
 - **mode**: `sequential`, `parallel` o `concurrent`
-- **difficulty**: Bits iniciales en cero (16-24 recomendado)
-  - 16 bits: Muy rápido (~0.05s secuencial)
-  - 20 bits: Rápido (~2-10s secuencial)
-  - 24 bits: Moderado (~1-5min secuencial)
+- **difficulty**: Bits iniciales en cero (20-24 usado en este proyecto)
+  - 20 bits (LOW): Rápido (~0.4s concurrent 2 hilos)
+  - 22 bits (MED): Moderado (~2s concurrent 2 hilos)
+  - 24 bits (HIGH): Desafiante (~12s concurrent 2 hilos)
 - **threads**: Número de hilos (usar potencias de 2: 1, 2, 4, 8)
 - **affinity**: `true` fija hilos al CPU 0 (solo efectivo en concurrent)
-- **repetitions**: Número de ejecuciones (mínimo 30 para validez estadística)
+- **repetitions**: Número de ejecuciones (5 usado actualmente, 30 recomendado para validez estadística completa)
 - **timeout**: Tiempo máximo en segundos (60-120 recomendado)
 - **seed**: Semilla para reproducibilidad
 
@@ -264,48 +333,50 @@ El proyecto incluye un **notebook Jupyter interactivo** que centraliza TODO el a
 1. **Carga de Datos**
    - Agregación automática de todos los CSVs en `results/raw/`
    - Normalización de nombres de columnas
-   - Validación de integridad
+   - Validación de integridad de las 105 ejecuciones
 
 2. **Estadísticas Descriptivas**
    - Tablas resumen por modo, threads y dificultad
    - Distribución de métricas (throughput, tiempo, CPU, memoria)
-   - Conteo de ejecuciones por configuración
+   - Conteo de ejecuciones por configuración (21 configs × 5 reps)
 
 3. **Análisis Comparativo por Modo**
    - Comparación Sequential vs Parallel vs Concurrent
    - Speedup relativo al baseline (Sequential)
-   - Análisis por número de hilos
+   - Análisis detallado por configuración
 
-4. **Speedup y Eficiencia**
-   - Cálculo de speedup real vs ideal (lineal)
+4. **Análisis por Dificultad**
+   - Impacto de LOW (20 bits) vs MED (22 bits) vs HIGH (24 bits)
+   - Gráficas de throughput y tiempo por dificultad
+   - Comparación entre modos para cada dificultad
+
+5. **Análisis por Número de Hilos**
+   - Escalabilidad con 1/2/4/8 hilos
+   - Speedup real vs ideal (lineal)
    - Eficiencia de paralelización (%)
    - Gráficas comparativas con línea ideal
 
-5. **Análisis Estadístico Riguroso**
+6. **Análisis Estadístico Riguroso**
    - **ANOVA** paramétrico (f_oneway)
    - **Kruskal-Wallis** no paramétrico
    - **Mann-Whitney U** con corrección de Bonferroni
    - Interpretación automática de significancia (p < 0.001, p < 0.05)
 
-6. **Visualizaciones Completas**
+7. **Visualizaciones Completas**
    - Throughput vs Threads por modo
    - Speedup y eficiencia vs ideal
+   - Análisis por dificultad (throughput y tiempo)
    - Boxplots y violin plots de distribuciones
    - Gráfico de barras con error bars (desviación estándar)
    - Heatmap threads × modo
    - Scatter plot tiempo vs memoria
 
-7. **Resumen Ejecutivo Automatizado**
+8. **Resumen Ejecutivo Automatizado**
    - Mejor configuración detectada
    - Comparación Parallel vs Concurrent
    - Recomendaciones basadas en resultados
    - Análisis del impacto de CPU pinning
 
-8. **Exportación de Resultados**
-   - `results/processed/summary.csv` — Speedup y eficiencia
-   - `results/processed/config_stats.csv` — Estadísticas por configuración
-   - `results/processed/statistical_summary.txt` — Tests estadísticos
-   - `results/processed/plots/*.png` — 5 gráficas de alta resolución (300 DPI)
 
 ### Uso del Notebook
 
@@ -320,39 +391,24 @@ jupyter notebook notebooks\analisis_rendimiento.ipynb
 En VS Code:
 1. Abrir `notebooks\analisis_rendimiento.ipynb`
 2. Seleccionar kernel Python 3.13
-3. Ejecutar todas las celdas (Cell > Run All)
-4. Los resultados procesados se guardarán automáticamente en `results/processed/`
+3. Configurar `EXPERIMENT_FOLDERS` (primera celda de configuración):
+   - `None`: Analizar todas las carpetas disponibles (por defecto)
+   - `"latest"`: Solo la carpeta más reciente
+   - `["Experiment_20251202_..."]`: Carpetas específicas
+4. Ejecutar todas las celdas (Cell > Run All)
+5. Explorar resultados interactivos (tablas, gráficas, estadísticas)
 
-### Resultados Principales
-
-**Hallazgos clave del análisis:**
-
-✅ **PARALLEL (4 threads):** MEJOR rendimiento
-- Speedup: **2.68×** (167% más rápido que sequential)
-- Efficiency: **67%** (buena escalabilidad)
-- Throughput: **1.68M hashes/s**
-
-⚠️ **CONCURRENT (4 threads):** Overhead severo
-- Speedup: **1.12×** (solo 12% mejor que sequential)
-- Efficiency: **28%** (contención de locks dominante)
-- Throughput: **708k hashes/s**
-
-📊 **Diferencia:** Parallel es **138%** más rápido que Concurrent
-- p-value < 0.001 (altamente significativo estadísticamente)
-- Concurrent sufre de: `std::atomic` overhead, false sharing, coherencia de caché
-
-**✅ Validación:** 210/210 ejecuciones exitosas, CV < 0.5, sin anomalías detectadas
 
 ### Archivos de Análisis
 
 | Archivo | Descripción | Uso |
 |---------|-------------|-----|
 | `notebooks/analisis_rendimiento.ipynb` | **Análisis completo interactivo** | ✅ USAR ESTE |
-| `results/processed/summary.csv` | Speedup y eficiencia (generado por notebook) | Referencia |
-| `results/processed/statistical_summary.txt` | Tests estadísticos (generado por notebook) | Revisión rápida |
-| `results/EXPERIMENT_INFO.md` | Metadata del sistema | Contexto |
+| `results/Experiment_*/raw/*.csv` | Datos crudos de ejecuciones | Referencia |
+| `results/Experiment_*/meta/*.json` | Metadata de experimentos | Contexto |
+| `results/Experiment_*/EXPERIMENT_INFO.md` | Metadata del sistema | Contexto |
 
-**Recomendación:** Ejecutar el notebook para generar todo el análisis automáticamente.
+**Recomendación:** Ejecutar el notebook para visualizar todo el análisis interactivamente.automáticamente.
 
 ---
 
@@ -397,9 +453,9 @@ Parseo de argumentos CLI y orquestación del flujo principal.
 #### Sequential
 - **Un solo hilo**
 - Búsqueda lineal desde el nonce inicial
-- Baseline para todas las comparaciones
+- Baseline para todas las comparaciones de speedup
 - Sin overhead de sincronización
-- Rendimiento: ~600k hashes/s (dificultad 16, AMD Ryzen 7 5700X)
+- Rendimiento: ~600-700k hashes/s (varía según CPU y dificultad)
 
 #### Parallel
 - **N hilos distribuidos en múltiples núcleos**
@@ -408,7 +464,7 @@ Parseo de argumentos CLI y orquestación del flujo principal.
 - Sincronización mediante `std::atomic<bool>` para señal de "encontrado"
 - Early exit: todos los hilos se detienen al encontrar solución
 - Escalabilidad horizontal en sistemas multi-core
-- **Rendimiento:** ~1.68M hashes/s con 4 threads (speedup 2.68×)
+- **Rendimiento esperado:** speedup 1.8-2.8× con 4 threads (depende del hardware)
 
 **Código simplificado:**
 ```cpp
@@ -441,7 +497,7 @@ void mine_parallel(uint64_t start_nonce, int num_threads) {
 - Simula concurrencia mediante context switching del scheduler
 - Todos los hilos compiten por el mismo core
 - Permite medir overhead de sincronización vs. modo secuencial
-- **Rendimiento:** ~708k hashes/s con 4 threads (speedup 1.12×, apenas mejor que sequential)
+- **Rendimiento esperado:** speedup 1.0-1.2× con 4 threads (overhead limita ganancia)
 
 **CPU Pinning (Windows API):**
 ```cpp
@@ -627,9 +683,11 @@ Este proyecto es de uso académico para el curso de Sistemas Operativos.
 .\scripts\setup_env.ps1                    # Windows - Setup Python
 $env:Path = "C:\msys64\mingw64\bin;" + $env:Path
 cmake -S . -B build -G Ninja               # Compilar
-.\scripts\run_all_modes.ps1 -Clean         # Ejecutar experimentos
 
-# 2. Análisis
+# 2. Ejecutar TODOS los experimentos (21 configs × 5 reps = 105 ejecuciones)
+.\scripts\run_all_modes.ps1 -Clean         # Tiempo estimado: 10-15 min
+
+# 3. Análisis
 jupyter notebook notebooks\analisis_rendimiento.ipynb  # Abrir notebook y Run All
 
 # 3. Limpieza
@@ -647,7 +705,7 @@ SO_Proyecto_Final/
 │   ├── sha256_hash.{h,cpp}     ← Wrapper SHA-256 OpenSSL
 │   ├── metrics.{h,cpp}         ← Sistema de métricas
 │   └── config.h                ← Estructuras de datos
-├── experiments/configs/         ← 7 configuraciones JSON
+├── experiments/configs/         ← 21 configuraciones JSON (3 modos × 4 hilos × 3 dificultades)
 ├── scripts/
 │   ├── run_all_modes.ps1       ← 🚀 Ejecutor maestro (PowerShell)
 │   ├── Run-Experiment.ps1      ← Ejecución individual
@@ -657,10 +715,10 @@ SO_Proyecto_Final/
 ├── notebooks/
 │   └── analisis_rendimiento.ipynb ← 📊 ANÁLISIS COMPLETO (procesamiento manual)
 ├── results/
-│   ├── raw/                    ← CSVs de ejecuciones
-│   ├── meta/                   ← Metadata JSON
-│   ├── processed/              ← Generados por notebook (summary, stats, plots)
-│   └── EXPERIMENT_INFO.md      ← Metadata del sistema
+│   └── Experiment_fecha_procesador_ram/  ← Carpeta única por ejecución
+│       ├── raw/                ← CSVs de ejecuciones
+│       ├── meta/               ← Metadata JSON
+│       └── EXPERIMENT_INFO.md  ← Metadata del sistema
 ├── CMakeLists.txt              ← Configuración de compilación
 ├── requirements.txt            ← Dependencias Python
 └── instrucciones.md            ← Enunciado del proyecto
@@ -681,7 +739,10 @@ SO_Proyecto_Final/
 2. **Experimentos Completos:**
    ```powershell
    .\scripts\run_all_modes.ps1 -Clean
-   # Esperar según configuración (5 reps aprox 5-10 min)
+   # Crea carpeta: results/Experiment_fecha_procesador_ram/
+   # Ejecuta 21 configuraciones × 5 repeticiones = 105 ejecuciones
+   # Tiempo estimado: 10-15 minutos
+   # Genera 105 CSVs en la carpeta del experimento
    ```
 
 3. **Análisis e Informe:**
@@ -692,8 +753,10 @@ SO_Proyecto_Final/
    # Abrir notebook
    jupyter notebook notebooks\analisis_rendimiento.ipynb
    
-   # En el notebook: Cell > Run All
-   # Los resultados procesados se guardan automáticamente en results/processed/
+   # En el notebook:
+   # 1. Configurar EXPERIMENT_FOLDERS (None/latest/lista específica)
+   # 2. Cell > Run All
+   # 3. Explorar gráficas y resultados 
    ```
 
 4. **Limpieza (opcional):**
