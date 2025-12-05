@@ -138,6 +138,5 @@ Write-Host "Experiment metadata written to: $reportPath" -ForegroundColor Green
 Write-Host ""
 Write-Host "Experimentos completados!" -ForegroundColor Green
 Write-Host "   Resultados guardados en: results\$experimentFolderName\" -ForegroundColor White
-Write-Host "   Abre el notebook y actualiza la ruta de datos a este experimento." -ForegroundColor White
 
 Pop-Location

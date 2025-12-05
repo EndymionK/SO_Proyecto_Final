@@ -1,2 +1,0 @@
-experiment_id,mode,difficulty,threads,affinity,found,nonce,total_hashes,elapsed_s,cpu_time_s,memory_mb,hashes_per_second
-exp_001,concurrent,24,4,true,true,4773626,18750627,23.7083,23.375,7.93359,790887

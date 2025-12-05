@@ -1,0 +1,11 @@
+{
+  "id": "exp_con_20t_low",
+  "mode": "concurrent",
+  "difficulty": 20,
+  "threads": 20,
+  "affinity": true,
+  "repetitions": 5,
+  "timeout": 120,
+  "seed": 42,
+  "notes": "Concurrent 20 threads - difficulty 20 - Heavy overhead expected"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "exp_par_24t_low",
+  "mode": "parallel",
+  "difficulty": 20,
+  "threads": 24,
+  "affinity": false,
+  "repetitions": 5,
+  "timeout": 120,
+  "seed": 42,
+  "notes": "Parallel 24 threads - difficulty 20 - Heavy oversubscription"
+}

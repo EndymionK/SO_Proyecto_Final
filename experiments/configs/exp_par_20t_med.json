@@ -1,0 +1,11 @@
+{
+  "id": "exp_par_20t_med",
+  "mode": "parallel",
+  "difficulty": 22,
+  "threads": 20,
+  "affinity": false,
+  "repetitions": 5,
+  "timeout": 180,
+  "seed": 42,
+  "notes": "Parallel 20 threads - difficulty 22 - Oversubscription test"
+}

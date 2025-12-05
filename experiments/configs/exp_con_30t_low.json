@@ -1,0 +1,11 @@
+{
+  "id": "exp_con_30t_low",
+  "mode": "concurrent",
+  "difficulty": 20,
+  "threads": 30,
+  "affinity": true,
+  "repetitions": 5,
+  "timeout": 120,
+  "seed": 42,
+  "notes": "Concurrent 30 threads - difficulty 20 - Extreme overhead test"
+}

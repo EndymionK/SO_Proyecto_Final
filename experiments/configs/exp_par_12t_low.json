@@ -1,0 +1,11 @@
+{
+  "id": "exp_par_12t_low",
+  "mode": "parallel",
+  "difficulty": 20,
+  "threads": 12,
+  "affinity": false,
+  "repetitions": 5,
+  "timeout": 120,
+  "seed": 42,
+  "notes": "Parallel 12 threads - difficulty 20 - Scaling test"
+}

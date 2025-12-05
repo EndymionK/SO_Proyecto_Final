@@ -1,0 +1,11 @@
+{
+  "id": "exp_con_10t_med",
+  "mode": "concurrent",
+  "difficulty": 22,
+  "threads": 10,
+  "affinity": true,
+  "repetitions": 5,
+  "timeout": 180,
+  "seed": 42,
+  "notes": "Concurrent 10 threads - difficulty 22 - CPU pinning overhead test"
+}

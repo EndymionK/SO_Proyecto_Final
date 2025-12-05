@@ -22,8 +22,8 @@ Este proyecto implementa y evalúa experimentalmente un minero Proof-of-Work sim
 ## Resumen
 - **Lenguaje:** C++ (con `std::thread`, `std::atomic`, Windows Threading API)
 - **Hashing:** SHA-256 (OpenSSL)
-- **Configuraciones:** 21 experimentos (3 modos × 4 niveles hilos × 3 dificultades)
-- **Repeticiones:** 5 ejecuciones por configuración (105 muestras totales)
+- **Configuraciones:** 38 experimentos para análisis de escalabilidad y punto de saturación
+- **Repeticiones:** 5 ejecuciones por configuración (190 muestras totales)
 - **Métricas:** Throughput (hashes/s), tiempo, uso de CPU/memoria
 - **Análisis:** Python (pandas, scipy, matplotlib) para estadística y gráficas
 - **Plataforma:** Windows nativo (MinGW-w64 + MSYS2)
@@ -56,11 +56,11 @@ cmake --build build
 .\scripts\run_all_modes.ps1 -Clean
 ```
 
-Este script ejecuta **automáticamente** las 21 configuraciones experimentales:
+Este script ejecuta **automáticamente** las 38 configuraciones experimentales:
 - **Crea** carpeta de experimento: `results/Experiment_fecha_procesador_ram/`
 - **Limpia** resultados anteriores en esa carpeta (con `-Clean`)
-- **Ejecuta** 21 configuraciones × 5 repeticiones = **105 ejecuciones**
-- **Tiempo estimado:** 10-15 minutos (depende del hardware)
+- **Ejecuta** 38 configuraciones × 5 repeticiones = **190 ejecuciones**
+- **Tiempo estimado:** 20-25 minutos (depende del hardware)
 - **Genera** metadata del sistema en `results/Experiment_*/EXPERIMENT_INFO.md`
 
 **Estructura de resultados:**
@@ -77,9 +77,11 @@ results/
 ```
 
 **Configuraciones incluidas:**
-- Sequential: 3 configuraciones (1 hilo, dificultad LOW/MED/HIGH)
-- Concurrent: 9 configuraciones (2/4/8 hilos, dificultad LOW/MED/HIGH, CPU pinning)
-- Parallel: 9 configuraciones (2/4/8 hilos, dificultad LOW/MED/HIGH, multi-core)
+- **Sequential:** 3 configs (1 hilo, dificultad LOW/MED/HIGH) - Baseline
+- **Concurrent:** 17 configs (2/4/8/10/20/30/40 hilos, CPU pinning) - Análisis de overhead
+- **Parallel:** 18 configs (2/4/8/12/16/20/24/32 hilos, multi-core) - Análisis de escalabilidad
+
+**Objetivo:** Identificar el **punto de saturación** donde agregar más hilos deja de ser beneficioso.
 
 **Dificultades:**
 - LOW (20 bits): ~0.4s por ejecución
@@ -113,8 +115,10 @@ En el notebook:
 **Análisis incluidos:**
 - Comparación de modos (Sequential/Concurrent/Parallel)
 - Análisis por dificultad (LOW/MED/HIGH)
-- Análisis por número de hilos (1/2/4/8)
+- **Análisis de escalabilidad (2-40 hilos)** - Identificación de punto de saturación
 - Speedup y eficiencia vs ideal lineal
+- **Degradación por oversubscription** - CPU pinning overhead
+- **Punto óptimo de paralelización** - Balance rendimiento/recursos
 - Tests estadísticos (ANOVA, Kruskal-Wallis, Mann-Whitney U)
 
 ### 6. Revisar resultados
@@ -333,17 +337,20 @@ El proyecto incluye un **notebook Jupyter interactivo** que centraliza TODO el a
 1. **Carga de Datos**
    - Agregación automática de todos los CSVs en `results/raw/`
    - Normalización de nombres de columnas
-   - Validación de integridad de las 105 ejecuciones
+   - Validación de integridad de las 190 ejecuciones
 
 2. **Estadísticas Descriptivas**
    - Tablas resumen por modo, threads y dificultad
    - Distribución de métricas (throughput, tiempo, CPU, memoria)
-   - Conteo de ejecuciones por configuración (21 configs × 5 reps)
+   - Conteo de ejecuciones por configuración (38 configs × 5 reps)
+   - Análisis de variabilidad entre repeticiones
+   - Análisis de variabilidad entre repeticiones
 
 3. **Análisis Comparativo por Modo**
    - Comparación Sequential vs Parallel vs Concurrent
    - Speedup relativo al baseline (Sequential)
-   - Análisis detallado por configuración
+   - **Análisis de 38 configuraciones diferentes**
+   - Identificación de configuración óptima por modo
 
 4. **Análisis por Dificultad**
    - Impacto de LOW (20 bits) vs MED (22 bits) vs HIGH (24 bits)
@@ -351,10 +358,12 @@ El proyecto incluye un **notebook Jupyter interactivo** que centraliza TODO el a
    - Comparación entre modos para cada dificultad
 
 5. **Análisis por Número de Hilos**
-   - Escalabilidad con 1/2/4/8 hilos
-   - Speedup real vs ideal (lineal)
-   - Eficiencia de paralelización (%)
-   - Gráficas comparativas con línea ideal
+   - **Escalabilidad extendida:** 1-40 hilos (Concurrent) y 2-32 hilos (Parallel)
+   - **Punto de saturación:** Identificación del plateau de rendimiento
+   - **Rendimientos decrecientes:** Overhead por oversubscription
+   - Speedup real vs ideal (lineal) - curva de saturación
+   - Eficiencia de paralelización (%) - caída después del óptimo
+   - **Sweet spot identification:** Mejor balance rendimiento/recursos
 
 6. **Análisis Estadístico Riguroso**
    - **ANOVA** paramétrico (f_oneway)
@@ -669,9 +678,6 @@ jupyter notebook notebooks\analisis_rendimiento.ipynb
 ## Licencia
 Este proyecto es de uso académico para el curso de Sistemas Operativos.
 
-## Autores
-[Tu nombre / equipo]
-
 ---
 
 ## 📚 Guía Rápida de Referencia
@@ -684,8 +690,8 @@ Este proyecto es de uso académico para el curso de Sistemas Operativos.
 $env:Path = "C:\msys64\mingw64\bin;" + $env:Path
 cmake -S . -B build -G Ninja               # Compilar
 
-# 2. Ejecutar TODOS los experimentos (21 configs × 5 reps = 105 ejecuciones)
-.\scripts\run_all_modes.ps1 -Clean         # Tiempo estimado: 10-15 min
+# 2. Ejecutar TODOS los experimentos (38 configs × 5 reps = 190 ejecuciones)
+.\scripts\run_all_modes.ps1 -Clean         # Tiempo estimado: 20-25 min
 
 # 3. Análisis
 jupyter notebook notebooks\analisis_rendimiento.ipynb  # Abrir notebook y Run All

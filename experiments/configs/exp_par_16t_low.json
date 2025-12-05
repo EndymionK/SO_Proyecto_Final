@@ -1,0 +1,11 @@
+{
+  "id": "exp_par_16t_low",
+  "mode": "parallel",
+  "difficulty": 20,
+  "threads": 16,
+  "affinity": false,
+  "repetitions": 5,
+  "timeout": 120,
+  "seed": 42,
+  "notes": "Parallel 16 threads - difficulty 20 - Testing beyond physical cores"
+}
