@@ -64,7 +64,7 @@ bool parse_args(int argc, char* argv[], Config& config) {
         }
         else if (arg == "--metrics-out" && i + 1 < argc) {
             std::string path = argv[++i];
-            // Remove quotes if present
+            // Remover comillas si existen alrededor de la ruta (delimitador de cadena)
             if (path.length() >= 2 && path.front() == '"' && path.back() == '"') {
                 path = path.substr(1, path.length() - 2);
             }
