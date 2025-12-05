@@ -63,7 +63,12 @@ bool parse_args(int argc, char* argv[], Config& config) {
             config.affinity = (affinity_str == "true" || affinity_str == "1");
         }
         else if (arg == "--metrics-out" && i + 1 < argc) {
-            config.metrics_output = argv[++i];
+            std::string path = argv[++i];
+            // Remove quotes if present
+            if (path.length() >= 2 && path.front() == '"' && path.back() == '"') {
+                path = path.substr(1, path.length() - 2);
+            }
+            config.metrics_output = path;
             has_metrics_out = true;
         }
         else {
@@ -125,7 +130,6 @@ int main(int argc, char* argv[]) {
               << " hashes/s" << std::endl;
     
     Metrics::export_to_csv(result, config, config.metrics_output);
-    std::cout << "\nMetrics exported to: " << config.metrics_output << std::endl;
     
     return result.found ? 0 : 2;
 }

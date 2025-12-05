@@ -99,7 +99,7 @@ for ($i = 1; $i -le $reps; $i++) {
         "--threads", $threads,
         "--seed", $seed,
         "--timeout", $timeout,
-        "--metrics-out", $outCsv
+        "--metrics-out", "`"$outCsv`""
     )
     
     if ($affinity -eq $true -or $affinity -eq "true") {
